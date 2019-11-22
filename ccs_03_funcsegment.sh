@@ -11,6 +11,7 @@
 ## [2]. Jo HJ, Saad ZS, Simmons WK, Milbury LA, Cox RW. Mapping sources of correlation in resting state FMRI, 
 ##	with artifact detection and removal. Neuroimage. 2010 Aug 15;52(2):571-82.
 ##########################################################################################################################
+## - adapt func/reg directory name, Ting Xu, 2014.06
 
 ## subject
 subject=$1
@@ -22,6 +23,8 @@ rest=$3
 anat_dir_name=$4
 ## name of func directory
 func_dir_name=$5
+## name of func registration directory
+func_reg_dir_name=$6
 
 ##set your desired spatial smoothing FWHM - it should match that used in 2_funcpreproc.sh
 FWHM=6
@@ -30,15 +33,15 @@ sigma=`echo "scale=10 ; ${FWHM}/2.3548" | bc`
 ## directory setup
 anat_dir=${dir}/${subject}/${anat_dir_name}
 func_dir=${dir}/${subject}/${func_dir_name}
-func_reg_dir=${func_dir}/reg
+func_reg_dir=${func_dir}/${func_reg_dir_name}
 anat_seg_dir=${anat_dir}/segment
 func_seg_dir=${func_dir}/segment
 
 SUBJECTS_DIR=${dir}
 
-if [ $# -lt 5 ];
+if [ $# -lt 6 ];
 then
-        echo -e "\033[47;35m Usage: $0 subject analysis_dir rest_name anat_dir_name func_dir_name \033[0m"
+        echo -e "\033[47;35m Usage: $0 subject analysis_dir rest_name anat_dir_name func_dir_name func_reg_dir_name\033[0m"
         exit
 fi
 

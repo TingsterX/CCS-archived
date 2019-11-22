@@ -6,6 +6,7 @@
 ## R-fMRI master: Xi-Nian Zuo.
 ## Email: zuoxn@psych.ac.cn or zuoxinian@gmail.com.
 ##########################################################################################################################
+## - adapt the registration directory, Ting
 
 ## subject
 subject=$1
@@ -26,15 +27,17 @@ standard_template=$7
 fsaverage=$8
 ## name of reg dir
 reg_dir_name=$9
+## name of func reg dir
+func_reg_dir_name=${10}
 
 ## parameter setup for preproc
 
 ## set your desired spatial smoothing FWHM - we use 6 (acquisition voxel size is 3x3x4mm)
 FWHM=6 ; sigma=`echo "scale=10 ; ${FWHM}/2.3548" | bc`
 
-if [ $# -lt 8 ];
+if [ $# -lt 10 ];
 then
-        echo -e "\033[47;35m Usage: $0 subject analysis_dir rest_name anat_dir_name func_dir_name done_refine_reg standard_template (full path) fsaverage (only name) \033[0m"
+        echo -e "\033[47;35m Usage: $0 subject analysis_dir rest_name anat_dir_name func_dir_name done_refine_reg standard_template (full path) fsaverage (only name) anat_reg_dir_name func_reg_dir_name \033[0m"
         exit
 fi
 
@@ -42,13 +45,9 @@ echo --------------------------------------------------------
 echo !!!! RUNNING FINAL PREPROCESSING OF FUNCTIONAL DATA !!!!
 echo --------------------------------------------------------
 
-if [ $# -lt 9 ];
-then
-        reg_dir_name=reg
-fi
 ## directory setup
 func_dir=${dir}/${subject}/${func_dir_name}
-func_reg_dir=${func_dir}/reg
+func_reg_dir=${func_dir}/${func_reg_dir_name}
 anat_dir=${dir}/${subject}/${anat_dir_name}
 anat_reg_dir=${anat_dir}/${reg_dir_name}
 FC_dir=${func_dir}
@@ -78,13 +77,20 @@ then
         then
                 for hemi in lh rh
                 do
-                        ## vol func to fsaverage surface
+                        if [ ! -e ${func_mask_dir}/brain.${fsaverage}.${hemi}.nii.gz ]
+			then
+				mri_vol2surf --mov ${func_mask_dir}/brain.nii.gz --reg ${func_reg_dir}/bbregister.dof6.dat --trgsubject fsaverage --interp trilin --projfrac 0.5 --hemi ${hemi} --o ${func_mask_dir}/brain.fsaverage.${hemi}.nii.gz --noreshape --cortex --surfreg sphere.reg
+                        	mri_surf2surf --srcsubject fsaverage --sval ${func_mask_dir}/brain.fsaverage.${hemi}.nii.gz --hemi ${hemi} --cortex --trgsubject ${fsaverage} --tval ${func_mask_dir}/brain.${fsaverage}.${hemi}.nii.gz --surfreg sphere.reg
+                        	mri_binarize --i ${func_mask_dir}/brain.fsaverage.${hemi}.nii.gz --min .00001 --o ${func_mask_dir}/brain.fsaverage.${hemi}.nii.gz
+                        	mri_binarize --i ${func_mask_dir}/brain.${fsaverage}.${hemi}.nii.gz --min .00001 --o ${func_mask_dir}/brain.${fsaverage}.${hemi}.nii.gz
+			fi
+			## vol func to fsaverage surface
                         mri_vol2surf --mov ${FC_dir}/${rest}_pp_nofilt_sm0.nii.gz --reg ${func_reg_dir}/bbregister.dof6.dat --trgsubject fsaverage --interp trilin --projfrac 0.5 --hemi ${hemi} --o ${FC_dir}/tmp.${hemi}.nii.gz --noreshape --cortex --surfreg sphere.reg
                         ## smoothing on fsaverage surface
                         mris_fwhm --s fsaverage --hemi ${hemi} --smooth-only --i ${FC_dir}/tmp.${hemi}.nii.gz --fwhm ${FWHM} --o ${FC_dir}/tmp.sm${FWHM}.${hemi}.nii.gz --mask ${func_dir}/mask/brain.fsaverage.${hemi}.nii.gz
                         ## down-sample to ${fsaverage}
                         mri_surf2surf --srcsubject fsaverage --sval ${FC_dir}/tmp.${hemi}.nii.gz  --hemi ${hemi} --cortex --trgsubject ${fsaverage} --tval ${FC_dir}/${rest}.pp.nofilt.sm0.${fsaverage}.${hemi}.nii.gz --surfreg sphere.reg
-                        mri_surf2surf --srcsubject fsaverage --sval ${FC_dir}/tmp.sm${FWHM}.${hemi}.nii.gz  --hemi ${hemi} --cortex --trgsubject ${fsaverage} --tval ${FC_dir}/rest.pp.nofilt.sm${FWHM}.${fsaverage}.${hemi}.nii.gz --surfreg sphere.reg
+                        mri_surf2surf --srcsubject fsaverage --sval ${FC_dir}/tmp.sm${FWHM}.${hemi}.nii.gz  --hemi ${hemi} --cortex --trgsubject ${fsaverage} --tval ${FC_dir}/${rest}.pp.nofilt.sm${FWHM}.${fsaverage}.${hemi}.nii.gz --surfreg sphere.reg
                         rm -rv ${FC_dir}/tmp*.nii.gz
                 done
         else

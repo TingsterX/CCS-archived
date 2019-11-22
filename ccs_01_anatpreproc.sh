@@ -49,11 +49,13 @@ then
 	if [ ${num_scans} -eq 1 ]
 	then
 		rm -v ${anat_dir}/${anat}1_sanlm.nii.gz
+		DenoiseImage -d 3 -i ${anat_dir}/${anat}.nii.gz -o ${anat_dir}/${anat}_sanlm.nii.gz
 		ln -s ${anat_dir}/${anat}_sanlm.nii.gz ${anat_dir}/${anat}1_sanlm.nii.gz
 	fi
 	for (( n=1; n <= ${num_scans}; n++ ))
 	do
-		3drefit -deoblique ${anat_dir}/${anat}${n}_sanlm.nii.gz
+		3drefit -deoblique ${anat_dir}/${anat}${n}.nii.gz
+		DenoiseImage -d 3 -i ${anat_dir}/${anat}${n}.nii.gz -o ${anat_dir}/${anat}${n}_sanlm.nii.gz
 		mri_convert --in_type nii ${anat}${n}_sanlm.nii.gz ${SUBJECTS_DIR}/${subject}/mri/orig/00${n}.mgz
 	done	
 else

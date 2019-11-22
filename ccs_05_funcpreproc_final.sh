@@ -6,6 +6,7 @@
 ## R-fMRI master: Xi-Nian Zuo.
 ## Email: zuoxn@psych.ac.cn or zuoxinian@gmail.com.
 ##########################################################################################################################
+## - adapt the band pass, Ting
 
 ## subject
 subject=$1
@@ -24,18 +25,21 @@ done_refine_reg=$6
 standard_template=$7
 ## standard surface
 fsaverage=$8
-## name of regi dir
-reg_dir_name=$9
+## high pass
+hp=${9}
+## low pass
+lp=${10}
+## name of anat reg dir
+reg_dir_name=${11}
+## name of func reg dir
+func_reg_dir_name=${12}
 
 ## set your desired spatial smoothing FWHM - we use 6 (acquisition voxel size is 3x3x4mm)
 FWHM=6 ; sigma=`echo "scale=10 ; ${FWHM}/2.3548" | bc`
 
-## Set high pass and low pass cutoffs for temporal filtering
-hp=0.01 ; lp=0.1
-
-if [ $# -lt 8 ];
+if [ $# -lt 12 ];
 then
-        echo -e "\033[47;35m Usage: $0 subject analysis_dir rest_name anat_dir_name func_dir_name done_refine_reg standard_template (full path) fsaverage (only name) \033[0m"
+        echo -e "\033[47;35m Usage: $0 subject analysis_dir rest_name anat_dir_name func_dir_name done_refine_reg standard_template (full path) fsaverage (only name) high-pass low-pass anat_reg_dir_name func_reg_dir_name\033[0m"
         exit
 fi
 
@@ -43,13 +47,10 @@ echo --------------------------------------------------------
 echo !!!! RUNNING FINAL PREPROCESSING OF FUNCTIONAL DATA !!!!
 echo --------------------------------------------------------
 
-if [ $# -lt 9 ];
-then
-	reg_dir_name=reg
-fi
+
 ## directory setup
 func_dir=${dir}/${subject}/${func_dir_name}
-func_reg_dir=${func_dir}/reg
+func_reg_dir=${func_dir}/${func_reg_dir_name}
 anat_dir=${dir}/${subject}/${anat_dir_name}
 anat_reg_dir=${anat_dir}/${reg_dir_name}
 FC_dir=${func_dir}
@@ -94,7 +95,14 @@ then
         then
                 for hemi in lh rh
                 do
-                        ## vol func to fsaverage surface
+                        if [ ! -e ${func_mask_dir}/brain.${fsaverage}.${hemi}.nii.gz ]
+                        then
+                                mri_vol2surf --mov ${func_mask_dir}/brain.nii.gz --reg ${func_reg_dir}/bbregister.dof6.dat --trgsubject fsaverage --interp trilin --projfrac 0.5 --hemi ${hemi} --o ${func_mask_dir}/brain.fsaverage.${hemi}.nii.gz --noreshape --cortex --surfreg sphere.reg
+                                mri_surf2surf --srcsubject fsaverage --sval ${func_mask_dir}/brain.fsaverage.${hemi}.nii.gz --hemi ${hemi} --cortex --trgsubject ${fsaverage} --tval ${func_mask_dir}/brain.${fsaverage}.${hemi}.nii.gz --surfreg sphere.reg
+                                mri_binarize --i ${func_mask_dir}/brain.fsaverage.${hemi}.nii.gz --min .00001 --o ${func_mask_dir}/brain.fsaverage.${hemi}.nii.gz
+                                mri_binarize --i ${func_mask_dir}/brain.${fsaverage}.${hemi}.nii.gz --min .00001 --o ${func_mask_dir}/brain.${fsaverage}.${hemi}.nii.gz
+                        fi
+			## vol func to fsaverage surface
 			mri_vol2surf --mov ${gsFC_dir}/${rest}_pp_sm0.nii.gz --reg ${func_reg_dir}/bbregister.dof6.dat --trgsubject fsaverage --interp trilin --projfrac 0.5 --hemi ${hemi} --o ${gsFC_dir}/tmp.${hemi}.nii.gz --noreshape --cortex --surfreg sphere.reg
                         mri_vol2surf --mov ${FC_dir}/${rest}_pp_sm0.nii.gz --reg ${func_reg_dir}/bbregister.dof6.dat --trgsubject fsaverage --interp trilin --projfrac 0.5 --hemi ${hemi} --o ${FC_dir}/tmp.${hemi}.nii.gz --noreshape --cortex --surfreg sphere.reg
                         ## smoothing on fsaverage surface

@@ -8,6 +8,7 @@
 ## R-fMRI master: Xi-Nian Zuo.
 ## Email: zuoxn@psych.ac.cn or zuoxinian@gmail.com.
 ##########################################################################################################################
+## - adapt func/reg directory name, Ting Xu, 2014.06
 
 ## subject
 subject=$1
@@ -17,18 +18,20 @@ dir=$2
 rest=$3
 ## name of func directory
 func_dir_name=$4
+## name of func reg directory
+func_reg_dir_name=$5
 ## if use SVD averaged nuisances
-svd=$5
+svd=$6
 
 ## directory setup
 func_dir=${dir}/${subject}/${func_dir_name}
-func_reg_dir=${func_dir}/reg
+func_reg_dir=${func_dir}/${func_reg_dir_name}
 func_segment_dir=${func_dir}/segment
 nuisance_dir=${func_dir}/nuisance
 
 if [ $# -lt 5 ];
 then
-        echo -e "\033[47;35m Usage: $0 subject analysis_dir rest_name func_dir_name svd \033[0m"
+        echo -e "\033[47;35m Usage: $0 subject analysis_dir rest_name func_dir_name func_reg_dir_name svd \033[0m"
         exit
 fi
 

@@ -52,7 +52,6 @@ then
 	## 1. Performing bbregister
 	fslmaths ${func_dir}/${rest}_mc.nii.gz -Tmean ${func_dir}/mean_func_mc.nii.gz
 	if [ ${redo_reg} = 'true' ]; then
-	then
 		rm -f ${func_reg_dir};  mkdir -p ${func_reg_dir} ; cd ${func_reg_dir}
 		if [ ${if_epi0} = 'true' ]
 		then
@@ -84,7 +83,7 @@ then
 		else
             cp ${func_reg_dir}/bbregister_rsp2rsp.dof6.init.dat ${func_reg_dir}/bbregister_rsp2rsp.dof6.dat ; 
             cp ${func_reg_dir}/flirt_rsp2rsp.init.mtx ${func_reg_dir}/flirt_rsp2rsp.mtx
-            convert_xfm -omat ${func_reg_dir}/flirt.mat -concate ${func_reg_dir}/flirt_rsp2rsp.mtx ${func_reg_dir}/rpi2rsp.mat
+            convert_xfm -omat ${func_reg_dir}/flirt.mat -concat ${func_reg_dir}/flirt_rsp2rsp.mtx ${func_reg_dir}/rpi2rsp.mat
             # write the fs registratio matrix from rpi func to rsp anat 
             tkregister2 --mov ${mov0} --targ ${highres} --fsl ${func_reg_dir}/flirt.mat --noedit --reg ${func_reg_dir}/bbregister.dof6.dat			
 		fi
@@ -92,7 +91,7 @@ then
     
 	## 2. write the registration to fsl format
 	echo $subject
-	cp flirt.mtx example_func2highres.mat
+	cp flirt.mat example_func2highres.mat
 	## Create mat file for conversion from subject's anatomical to functional
 	convert_xfm -inverse -omat highres2example_func.mat example_func2highres.mat
 

@@ -80,7 +80,7 @@ then
         flirt -in ${func_dir}/example_func_brain.nii.gz -ref ${anat_reg_dir}/highres_rpi.nii.gz -applyxfm -init example_func2highres_rpi.mat -out example_func2highres_rpi.nii.gz
     fi 
     if [ ! -f highres_rpi2example_func.mat ]; then
-        convert_xfm -omat highres_rpi2example_func.mat -concat highres2example_func.mat ${anat_reg_dir}/rpi2rsp.mat
+        convert_xfm -omat highres_rpi2example_func.mat -concat highres2example_func.mat ${func_reg_dir}/rpi2rsp.mat
     fi
 	## 3. Making mask for surface-based functional data analysis
 	#if [ ! -e ${func_mask_dir}/brain.mni305.2mm.nii.gz ]; then
